@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Query Results</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.2em;
+            font-weight: 400;
+            margin: 0;
+            color: #34495e;
+        }
+        .sql-section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .sql-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            font-weight: 500;
+        }
+        .sql-code {
+            background: #f8f9fa;
+            color: #2c3e50;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            overflow-x: auto;
+            border: 1px solid #e9ecef;
+        }
+        .copy-btn {
+            background: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 15px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        .copy-btn:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
+        }
+        .results-section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .results-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            font-weight: 500;
+            text-align: center;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            color: #495057;
+            font-weight: 500;
+            border: 1px solid #e9ecef;
+        }
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: 600;
+            display: block;
+            color: #2c3e50;
+        }
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+        .results-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid #e9ecef;
+            table-layout: auto;
+        }
+        .results-table th {
+            background: #495057;
+            color: white;
+            padding: 16px 15px;
+            text-align: left;
+            font-weight: 500;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .results-table td {
+            padding: 14px 15px;
+            border-bottom: 1px solid #f1f3f4;
+            font-size: 0.9em;
+            color: #2c3e50;
+            word-wrap: break-word;
+            white-space: normal;
+            max-width: 300px;
+            vertical-align: top;
+        }
+        .results-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .results-table tr:hover {
+            background-color: #e9ecef;
+            transition: background-color 0.2s ease;
+        }
+        .results-table tr:last-child td {
+            border-bottom: none;
+        }
+        .no-results {
+            text-align: center;
+            padding: 60px;
+            color: #6c757d;
+            font-size: 1.1em;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        .back-btn {
+            background: #6c757d;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 20px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .back-btn:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
+        }
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #6c757d;
+            font-size: 1.2em;
+            font-weight: 500;
+        }
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #6c757d;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .container {
+            animation: slideIn 0.4s ease;
+        }
+        
+        /* Responsive table for mobile */
+        @media (max-width: 768px) {
+            .results-table {
+                font-size: 0.85em;
+            }
+            .results-table td,
+            .results-table th {
+                padding: 12px 8px;
+                max-width: 200px;
+            }
+            .stats {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .stat-item {
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>SQL Query Results</h1>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            Loading query results...
+        </div>
+
+        <div id="content" style="display: none;">
+            <div class="sql-section">
+                <h2>Generated SQL Query</h2>
+                <div id="sqlCode" class="sql-code"></div>
+                <button class="copy-btn" onclick="copyToClipboard()">Copy SQL</button>
+            </div>
+
+            <div class="results-section">
+                <h2>Query Results</h2>
+                <div id="stats" class="stats" style="display: none;">
+                    <div class="stat-item">
+                        <span class="stat-value" id="totalRecords">0</span>
+                        <div class="stat-label">Total Records</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="totalColumns">0</span>
+                        <div class="stat-label">Columns</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="queryTime">0ms</span>
+                        <div class="stat-label">Query Time</div>
+                    </div>
+                </div>
+                <div id="resultsTable"></div>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="/query/" class="back-btn">Back to Query</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get query parameters from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const sql = urlParams.get('sql');
+        const results = urlParams.get('results');
+        const queryTime = urlParams.get('queryTime');
+
+        if (sql) {
+            document.getElementById('loading').style.display = 'block';
+            
+            // Simulate loading time
+            setTimeout(() => {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+                
+                // Display SQL
+                document.getElementById('sqlCode').textContent = sql;
+                
+                // Display results if available
+                if (results) {
+                    try {
+                        const resultsData = JSON.parse(decodeURIComponent(results));
+                        displayResults(resultsData, queryTime ? parseInt(queryTime) : 0);
+                    } catch (e) {
+                        document.getElementById('resultsTable').innerHTML = 
+                            '<div class="no-results">No results found for your query.</div>';
+                    }
+                } else {
+                    document.getElementById('resultsTable').innerHTML = 
+                        '<div class="no-results">No results found for your query.</div>';
+                }
+            }, 1000);
+        } else {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+            document.getElementById('sqlCode').textContent = 'SELECT * FROM candidate';
+            document.getElementById('resultsTable').innerHTML = 
+                '<div class="no-results">No query data available.</div>';
+        }
+
+        function displayResults(results, queryTime) {
+            const table = document.getElementById('resultsTable');
+            
+            if (!results || results.length === 0) {
+                table.innerHTML = '<div class="no-results">No results found for your query.</div>';
+                return;
+            }
+            
+            // Update stats
+            const headers = Object.keys(results[0]);
+            document.getElementById('totalRecords').textContent = results.length;
+            document.getElementById('totalColumns').textContent = headers.length;
+            document.getElementById('queryTime').textContent = queryTime + 'ms';
+            document.getElementById('stats').style.display = 'flex';
+            
+            // Create table
+            let tableHTML = '<table class="results-table"><thead><tr>';
+            
+            // Add headers
+            headers.forEach(header => {
+                tableHTML += `<th>${header.replace(/_/g, ' ').toUpperCase()}</th>`;
+            });
+            tableHTML += '</tr></thead><tbody>';
+            
+            // Add data rows
+            results.forEach((row, index) => {
+                tableHTML += '<tr>';
+                headers.forEach(header => {
+                    const value = row[header];
+                    let displayValue = value !== null && value !== undefined ? value : '';
+                    
+                    // Format special values
+                    if (typeof displayValue === 'string' && displayValue.includes('@')) {
+                        displayValue = `<span style="color: #495057;">${displayValue}</span>`;
+                    }
+                    if (typeof displayValue === 'string' && displayValue.includes('http')) {
+                        displayValue = `<a href="${displayValue}" target="_blank" style="color: #495057; text-decoration: none;">${displayValue}</a>`;
+                    }
+                    
+                    tableHTML += `<td>${displayValue}</td>`;
+                });
+                tableHTML += '</tr>';
+            });
+            
+            tableHTML += '</tbody></table>';
+            table.innerHTML = tableHTML;
+        }
+        
+        function copyToClipboard() {
+            const sqlCode = document.getElementById('sqlCode').textContent;
+            navigator.clipboard.writeText(sqlCode).then(function() {
+                const copyBtn = document.querySelector('.copy-btn');
+                copyBtn.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyBtn.textContent = 'Copy SQL';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html> 

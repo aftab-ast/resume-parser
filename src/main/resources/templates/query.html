@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Natural Language to SQL Converter</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        .converter-container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.2em;
+            font-weight: 400;
+            color: #34495e;
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #34495e;
+            font-size: 1.1em;
+        }
+        textarea {
+            width: 100%;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            background: #f8f9fa;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #6c757d;
+            box-shadow: 0 0 10px rgba(108, 117, 125, 0.1);
+            background: white;
+        }
+        button {
+            background: #6c757d;
+            color: white;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-bottom: 25px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        button:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
+        }
+        .examples {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid #6c757d;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .examples h3 {
+            margin: 0 0 20px 0;
+            color: #495057;
+            font-size: 1.2em;
+            font-weight: 500;
+        }
+        .example-item {
+            margin-bottom: 12px;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 6px;
+            border-left: 3px solid #28a745;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease;
+        }
+        .example-item:hover {
+            transform: translateX(3px);
+        }
+        .example-item strong {
+            color: #28a745;
+            font-weight: 500;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #6c757d;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 25px;
+            border: 1px solid #f5c6cb;
+            font-weight: 500;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="converter-container">
+        <h1>Natural Language to SQL Converter</h1>
+        
+        <div class="examples">
+            <h3>Example Queries:</h3>
+            <div class="example-item">
+                <strong>Input:</strong> "Show me all candidates"
+            </div>
+            <div class="example-item">
+                <strong>Input:</strong> "Find candidates with name containing 'John'"
+            </div>
+            <div class="example-item">
+                <strong>Input:</strong> "Get the count of all candidates"
+            </div>
+            <div class="example-item">
+                <strong>Input:</strong> "List candidates ordered by name"
+            </div>
+        </div>
+        
+        <form id="queryForm">
+            <div class="form-group">
+                <label for="naturalLanguage">Enter your query in natural language:</label>
+                <textarea 
+                    id="naturalLanguage" 
+                    name="naturalLanguage" 
+                    placeholder="e.g., Show me all candidates"
+                    required></textarea>
+            </div>
+            
+            <button type="submit">Execute Query</button>
+        </form>
+        
+        <div id="loading" class="loading" style="display: none;">
+            Processing your query...
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+    </div>
+
+    <script>
+        document.getElementById('queryForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const naturalLanguage = document.getElementById('naturalLanguage').value;
+            const startTime = performance.now();
+            
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            
+            // Call Java API
+            fetch('/query/execute', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    naturalLanguage: naturalLanguage
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                
+                if (data.error) {
+                    document.getElementById('error').textContent = data.error;
+                    document.getElementById('error').style.display = 'block';
+                    return;
+                }
+                
+                // Redirect to results page
+                if (data.redirectUrl) {
+                    window.location.href = data.redirectUrl;
+                }
+            })
+            .catch(error => {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').textContent = 'Error: ' + error.message;
+                document.getElementById('error').style.display = 'block';
+            });
+        });
+    </script>
+</body>
+</html>
